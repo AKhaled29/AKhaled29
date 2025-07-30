@@ -1100,46 +1100,60 @@
     };
 
     // Dropdown Component
-    const CalculatorDropdown = ({ title, items, activeTab, setActiveTab }) => {
-      const [isOpen, setIsOpen] = useState(false);
+const CalculatorDropdown = ({ title, items, activeTab, setActiveTab, closeOtherDropdowns, isOpen, setIsOpen }) => {
+  const handleToggle = () => {
+    if (!isOpen) {
+      closeOtherDropdowns(title); // إغلاق القوائم الأخرى وفتح هذه القائمة
+    } else {
+      setIsOpen(null); // إغلاق هذه القائمة
+    }
+  };
 
-      return (
-        <div className="dropdown relative">
-          <button
-            className="dropdown-toggle w-full text-right px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {title}
-            <svg
-              className={`ml-2 h-5 w-5 inline transition-transform ${isOpen ? 'transform rotate-180' : ''}`}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-          {isOpen && (
-            <div className="dropdown-menu absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-              <div className="py-1">
-                {items.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`block w-full text-right px-4 py-2 text-sm ${activeTab === item.id ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setIsOpen(false);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+  const handleItemClick = (itemId) => {
+    if (!itemId.includes('new-feature')) {
+      setActiveTab(itemId);
+      setIsOpen(null); // إغلاق القائمة المنسدلة
+    }
+  };
+
+  return (
+    <div className="dropdown relative">
+      <button
+        className="dropdown-toggle w-full text-right px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        onClick={handleToggle}
+        aria-expanded={isOpen}
+        aria-label={isOpen ? `إغلاق قائمة ${title}` : `فتح قائمة ${title}`}
+      >
+        {title}
+        <svg
+          className={`ml-2 h-5 w-5 inline transition-transform ${isOpen ? 'transform rotate-180' : ''}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="dropdown-menu absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20">
+          <div className="py-1">
+            {items.map((item) => (
+              <button
+                key={item.id}
+                className={`block w-full text-right px-4 py-2 text-sm ${activeTab === item.id ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+                onClick={() => handleItemClick(item.id)}
+                disabled={item.comingSoon}
+              >
+                {item.label}
+                {item.comingSoon && <span className="coming-soon">قريبًا</span>}
+              </button>
+            ))}
+          </div>
         </div>
-      );
-    };
+      )}
+    </div>
+  );
+};
 
     // NewFeature Component
 const NewFeature = () => {
@@ -1233,10 +1247,11 @@ const NewFeature = () => {
   );
 };
     // Main App Component
-    const App = () => {
+const App = () => {
   const [activeTab, setActiveTab] = useState('iic-initiation');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+  const [openDropdown, setOpenDropdown] = useState(null); // تتبع القائمة المنسدلة المفتوحة
+
   const calculators = [
     {
       title: 'حاسبة الأنسولين (Non-DKA)',
@@ -1272,26 +1287,60 @@ const NewFeature = () => {
       ]
     },
     {
-      title: 'حاسبة تحليل غازات الدم',
-      items: [
-        { id: 'new-feature', label: 'ميزة جديدة', comingSoon: true }
-      ]
-    },
-    {
       title: 'حاسبة NEWS',
       items: [
         { id: 'news-score', label: 'National Early Warning Score' }
       ]
     },
+    {
+      title: 'حاسبة تحليل غازات الدم',
+      items: [
+        { id: 'new-feature', label: 'ميزة جديدة', comingSoon: true }
+      ]
+    },
+    
   ];
 
   const showActiveTab = (tabId) => {
     document.querySelectorAll('.tab-content').forEach(tab => {
       tab.classList.remove('active');
     });
-    document.getElementById(tabId).classList.add('active');
-    setMobileMenuOpen(false);
+    const tabElement = document.getElementById(tabId);
+    if (tabElement) {
+      tabElement.classList.add('active');
+    }
+    setMobileMenuOpen(false); // إغلاق القائمة الرئيسية
+    setOpenDropdown(null); // إغلاق جميع القوائم المنسدلة
   };
+
+  // إغلاق القوائم المنسدلة الأخرى
+  const closeOtherDropdowns = (title) => {
+    setOpenDropdown(title); // فتح القائمة الحالية وإغلاق الأخرى
+  };
+
+  // إغلاق القائمة الرئيسية والقوائم المنسدلة عند النقر خارجها
+  const handleOutsideClick = (e) => {
+    if (
+      mobileMenuOpen &&
+      !e.target.closest('.mobile-menu') &&
+      !e.target.closest('.md\\:hidden') &&
+      !e.target.closest('.dropdown-menu')
+    ) {
+      setMobileMenuOpen(false);
+      setOpenDropdown(null);
+    } else if (
+      openDropdown &&
+      !e.target.closest('.dropdown-menu') &&
+      !e.target.closest('.dropdown-toggle')
+    ) {
+      setOpenDropdown(null);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [mobileMenuOpen, openDropdown]);
 
   useEffect(() => {
     showActiveTab(activeTab);
@@ -1305,11 +1354,21 @@ const NewFeature = () => {
             <div className="flex justify-between items-center">
               <button 
                 className="md:hidden text-white p-2 order-1"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => {
+                  setMobileMenuOpen(!mobileMenuOpen);
+                  if (mobileMenuOpen) setOpenDropdown(null); // إغلاق القوائم المنسدلة عند إغلاق القائمة الرئيسية
+                }}
+                aria-label={mobileMenuOpen ? 'إغلاق القائمة' : 'فتح القائمة'}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                {mobileMenuOpen ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
               </button>
               <div className="header-title order-2">
                 <h1>كالكوميدك | Calcumedic</h1>
@@ -1326,6 +1385,9 @@ const NewFeature = () => {
                     items={calculator.items}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
+                    closeOtherDropdowns={closeOtherDropdowns}
+                    isOpen={openDropdown === calculator.title}
+                    setIsOpen={setOpenDropdown}
                   />
                 ))}
               </div>
