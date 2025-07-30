@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>كالكوميدك | Calcumedic</title>
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.10"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico"> 
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Error Boundary Component
+    const ErrorBoundary = ({ children }) => {
+      const [hasError, setHasError] = useState(false);
+      useEffect(() => {
+        setHasError(false);
+      }, []);
+      if (hasError) {
+        return <div className="text-danger-color text-center p-4">حدث خطأ، يرجى إعادة تحميل الصفحة</div>;
+      }
+      return children;
+    };
+
+    // MyForm Component
+    const MyForm = ({ buttText, inputArr, title, type, handleSub }) => {
+      const [formValues, setFormValues] = useState({});
+      const [errors, setErrors] = useState({});
+
+      const handleChange = (e) => {
+        const { name, value, type: inputType } = e.target;
+        setFormValues({ ...formValues, [name]: inputType === 'radio' ? value : value });
+        if (value.trim() === '' && inputType !== 'radio') {
+          setErrors({ ...errors, [name]: 'هذا الحقل مطلوب' });
+        } else if (inputType === 'number' && (isNaN(value) || Number(value) <= 0)) {
+          setErrors({ ...errors, [name]: 'الرجاء إدخال قيمة عددية صحيحة' });
+        } else {
+          setErrors({ ...errors, [name]: '' });
+        }
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        const newErrors = {};
+        inputArr.forEach((input) => {
+          if (!formValues[input.name] && input.type !== 'radio') {
+            newErrors[input.name] = 'هذا الحقل مطلوب';
+          } else if (input.type === 'number' && (isNaN(formValues[input.name]) || Number(formValues[input.name]) <= 0)) {
+            newErrors[input.name] = 'الرجاء إدخال قيمة عددية صحيحة';
+          }
+        });
+        setErrors(newErrors);
+        if (Object.values(newErrors).every((error) => !error)) {
+          try {
+            handleSub(formValues, Object.keys(newErrors).length > 0);
+          } catch (error) {
+            console.error('Form submission error:', error);
+            setErrors({ general: 'حدث خطأ أثناء الحساب، يرجى التحقق من المدخلات' });
+          }
+        }
+      };
+
+      return (
+        <div className="calculator-container">
+          <h2>{title}</h2>
+          <form className="medical-form" onSubmit={handleSubmit}>
+            <div className="form-row">
+              {inputArr.map((input) => (
+                <div key={input.name} className="form-group">
+                  <label>{input.label}</label>
+                  {input.type === 'radio' ? (
+                    <div className="flex gap-4">
+                      <label>
+                        <input
+                          type="radio"
+                          name={input.name}
+                          value={input.radioOne}
+                          onChange={handleChange}
+                          checked={formValues[input.name] === input.radioOne}
+                        />
+                        {input.radioOne}
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name={input.name}
+                          value={input.radioTwo}
+                          onChange={handleChange}
+                          checked={formValues[input.name] === input.radioTwo}
+                        />
+                        {input.radioTwo}
+                      </label>
+                    </div>
+                  ) : (
+                    <input
+                      type={input.type}
+                      name={input.name}
+                      value={formValues[input.name] || ''}
+                      onChange={handleChange}
+                      style={input.style || {}}
+                    />
+                  )}
+                  {errors[input.name] && <span className="text-danger-color text-sm">{errors[input.name]}</span>}
+                </div>
+              ))}
+            </div>
+            {errors.general && <div className="text-danger-color text-center mb-4">{errors.general}</div>}
+            <button type="submit" className="calculate-btn">{buttText}</button>
+          </form>
+        </div>
+      );
+    };
+
+  
+  const NEWSScore = () => {
+  const [result, setResult] = useState(null); // تغيير إلى null لتخزين كائن
+  
+  const inpArr = [
+    { label: 'معدل التنفس (في الدقيقة)', type: 'number', name: 'respiratoryRate' },
+    { label: 'نسبة الأكسجين في الدم (SpO2 %)', type: 'number', name: 'spo2' },
+    {
+      label: 'يتلقى أكسجين إضافي؟',
+      type: 'radio',
+      name: 'isOnOxygen',
+      radioOne: 'نعم',
+      radioTwo: 'لا',
+    },
+    { label: 'درجة الحرارة (°م)', type: 'number', name: 'temperature', step: '0.1' },
+    { label: 'ضغط الدم الانقباضي (mmHg)', type: 'number', name: 'systolicBP' },
+    { label: 'معدل ضربات القلب (في الدقيقة)', type: 'number', name: 'heartRate' },
+    {
+      label: 'مستوى الوعي (AVPU)',
+      type: 'radio',
+      name: 'avpu',
+      radioOne: 'A (يقظ)',
+      radioTwo: 'V, P, أو U (صوت، ألم، غير مستجيب)',
+    },
+  ];
+
+  const calculateNEWS = ({ respiratoryRate, spo2, isOnOxygen, temperature, systolicBP, heartRate, avpu }) => {
+    let score = 0;
+
+    // Respiratory Rate
+    if (respiratoryRate <= 8) score += 3;
+    else if (respiratoryRate >= 9 && respiratoryRate <= 11) score += 1;
+    else if (respiratoryRate >= 21 && respiratoryRate <= 24) score += 2;
+    else if (respiratoryRate >= 25) score += 3;
+
+    // SpO2
+    if (spo2 <= 91) score += 3;
+    else if (spo2 >= 92 && spo2 <= 93) score += 2;
+    else if (spo2 >= 94 && spo2 <= 95) score += 1;
+
+    // Supplemental O2
+    if (isOnOxygen === 'نعم') score += 2;
+
+    // Temperature
+    if (temperature <= 35.0) score += 3;
+    else if (temperature >= 35.1 && temperature <= 36.0) score += 1;
+    else if (temperature >= 38.1 && temperature <= 39.0) score += 1;
+    else if (temperature >= 39.1) score += 2;
+
+    // Systolic BP
+    if (systolicBP <= 90) score += 3;
+    else if (systolicBP >= 91 && systolicBP <= 100) score += 2;
+    else if (systolicBP >= 101 && systolicBP <= 110) score += 1;
+    else if (systolicBP >= 220) score += 3;
+
+    // Heart Rate
+    if (heartRate <= 40) score += 3;
+    else if (heartRate >= 41 && heartRate <= 50) score += 1;
+    else if (heartRate >= 91 && heartRate <= 110) score += 1;
+    else if (heartRate >= 111 && heartRate <= 130) score += 2;
+    else if (heartRate >= 131) score += 3;
+
+    // AVPU
+    if (avpu !== 'A (يقظ)') score += 3;
+
+    return score;
+  };
+
+  const interpretNEWS = (score) => {
+    if (score >= 5) {
+      return {
+        score,
+        instruction: `⚠️ NEWS = ${score} ⚠️ \n🚨 قُم باستدعاء فريق (RRT)`,
+        interpretation: 'الحالة حرجة تتطلب تدخل طبي فوري لمنع التدهور.'
+      };
+    } else if (score >= 4) {
+      return {
+        score,
+        instruction: `⚠️ NEWS = ${score}\n📞 اتصل بالطبيب المختص`,
+        interpretation: 'الحالة تتطلب تقييم طبي عاجل لتحديد التدخلات المناسبة.'
+      };
+    } else if (score === 3) {
+      return {
+        score,
+        instruction: `⚠️         NEWS = ${score}\n⏳ إعادة تقييم العلامات الحيوية بعد ساعة`,
+        interpretation: ' الحالة تحتاج إلى مراقبة وثيقة مع إعادة تقييم قريب.'
+      };
+    } else {
+      return {
+        score,
+        instruction: `✅  NEWS = ${score}\nالمريض مستقر. راقب بانتظام.`,
+        interpretation: 'الحالة مستقرة، لكن يجب الاستمرار في المراقبة الروتينية.'
+      };
+    }
+  };
+
+  const handleSubmit = (values, errors) => {
+    if (errors) {
+      setResult(null);
+      return;
+    }
+
+    // التحقق من القيم المدخلة
+    if (
+      values.respiratoryRate <= 0 ||
+      values.spo2 <= 0 ||
+      values.temperature <= 0 ||
+      values.systolicBP <= 0 ||
+      values.heartRate <= 0 ||
+      !values.isOnOxygen ||
+      !values.avpu
+    ) {
+      setResult({ instruction: 'الرجاء إدخال جميع القيم الحيوية بشكل صحيح', interpretation: '' });
+      return;
+    }
+
+    const score = calculateNEWS({
+      respiratoryRate: Number(values.respiratoryRate),
+      spo2: Number(values.spo2),
+      isOnOxygen: values.isOnOxygen,
+      temperature: Number(values.temperature),
+      systolicBP: Number(values.systolicBP),
+      heartRate: Number(values.heartRate),
+      avpu: values.avpu,
+    });
+
+    setResult(interpretNEWS(score));
+  };
+
+  return (
+    <div className="tab-content" id="news-score">
+      <div className="calculator-container">
+        <MyForm
+          buttText="حساب"
+          inputArr={inpArr}
+          title="حاسبة NEWS (نظام الإنذار المبكر)"
+          type="NEWSScore"
+          handleSub={handleSubmit}
+        />
+        <div className="result-container" style={{ display: result ? 'block' : 'none' }}>
+          <h3>النتائج:</h3>
+          <div className="result-grid">
+            <div className="result-card">
+              <span className="result-label">النتيجة:</span>
+              <span
+                className={`result-value ${result?.score >= 5 ? 'critical' : ''}`}
+                style={{ color: result?.score >= 5 ? 'var(--danger-color)' : 'var(--success-color)', whiteSpace: 'pre-line' }}
+              >
+                {result?.instruction}
+              </span>
+            </div>
+            {result?.interpretation && (
+              <div className="result-card">
+                <span className="result-label">التفسير:</span>
+                <span className="result-value" style={{ whiteSpace: 'pre-line' }}>
+                  {result.interpretation}
+                </span>
+              </div>
+            )}
+          
+          </div>
+         
+          
+       </div> 
+      </div>
+    </div>
+  );
+};
+  
+    // FluidFlowRate Component
+    const FluidFlowRate = () => {
+      const [result, setResult] = useState('');
+      const [timeValue, setTimeValue] = useState('');
+      
+      const inpArr = [
+        { label: 'إجمالي حجم السائل (مل)', type: 'number', name: 'volume' },
+        { 
+          label: 'نوع أنبوب التوصيل',
+          type: 'radio',
+          name: 'dropFactor',
+          radioOne: 'IV Set (15 قطرة/مل)',
+          radioTwo: 'Solu-set (60 قطرة/مل)',
+        },
+        { 
+          label: '',
+          type: 'radio',
+          name: 'dropFactor',
+          radioOne: 'Blood transfusion (10 قطرة/مل)',
+          radioTwo: 'أخرى (حدد عدد القطرات)',
+        },
+        { label: 'عدد القطرات/مل (إذا اخترت أخرى)', type: 'number', name: 'customDropFactor', placeholder: 'أدخل عدد القطرات لكل مل' },
+        { label: 'الوقت (ساعات)', type: 'number', name: 'time' },
+      ];
+
+      const handleSubmit = (values, errors) => {
+        if (errors) {
+          setResult('');
+          return;
+        }
+        
+        let dropFactor;
+        if (values.dropFactor === 'IV Set (15 قطرة/مل)') {
+          dropFactor = 15;
+        } else if (values.dropFactor === 'Solu-set (60 قطرة/مل)') {
+          dropFactor = 60;
+        } else if (values.dropFactor === 'Blood transfusion (10 قطرة/مل)') {
+          dropFactor = 10;
+          // تعيين الوقت تلقائيًا لـ 4 ساعات لنقل الدم
+          values.time = 4;
+          setTimeValue('4');
+        } else {
+          dropFactor = Number(values.customDropFactor) || 0;
+        }
+        
+        if (dropFactor <= 0) {
+          setResult('الرجاء إدخال قيمة صحيحة لعدد القطرات');
+          return;
+        }
+        
+        const dropsPerMinute = (values.volume * dropFactor) / (values.time * 60);
+        setResult(`اضبط المحلول على ${Math.round(dropsPerMinute)} قطرة/دقيقة`);
+      };
+
+      return (
+        <div className="tab-content" id="fluid-flow-rate">
+          <div className="calculator-container">
+            <MyForm
+              buttText="حساب"
+              inputArr={inpArr}
+              title="حاسبة معدل تدفق السوائل"
+              type="FluidFlowRate"
+              handleSub={handleSubmit}
+            />
+            <div className="result-container" style={{ display: result ? 'block' : 'none' }}>
+              <h3>النتائج:</h3>
+              <div className="result-grid">
+                <div className="result-card">
+                  <span className="result-label">معدل التدفق:</span>
+                  <span className="result-value" style={{ color: 'var(--success-color)' }}>{result}</span>
+                </div>
+              </div>
+              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // BradenScore Component
+    const BradenScore = () => {
+      const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+      const [userAnswers, setUserAnswers] = useState({});
+      const [score, setScore] = useState(null);
+      const [riskLevel, setRiskLevel] = useState('');
+      const [instructions, setInstructions] = useState('');
+
+      const bradenQuestions = [
+        {
+          key: "sensory",
+          question: "1. إدراك الإحساس (Sensory Perception)",
+          options: [
+            { label: "فقدان كامل للإحساس", value: 1 },
+            { label: "محدود جدًا", value: 2 },
+            { label: "محدود قليلاً", value: 3 },
+            { label: "لا يوجد ضعف", value: 4 }
+          ]
+        },
+        {
+          key: "moisture",
+          question: "2. الرطوبة (Moisture)",
+          options: [
+            { label: "مبلل باستمرار", value: 1 },
+            { label: "غالبًا مبلل", value: 2 },
+            { label: "أحيانًا مبلل", value: 3 },
+            { label: "نادرًا ما يكون مبلل", value: 4 }
+          ]
+        },
+        {
+          key: "activity",
+          question: "3. النشاط (Activity)",
+          options: [
+            { label: "طريح الفراش", value: 1 },
+            { label: "على كرسي فقط", value: 2 },
+            { label: "يمشي أحيانًا", value: 3 },
+            { label: "يمشي بشكل متكرر", value: 4 }
+          ]
+        },
+        {
+          key: "mobility",
+          question: "4. الحركة (Mobility)",
+          options: [
+            { label: "غير قادر على الحركة تمامًا", value: 1 },
+            { label: "محدود جدًا", value: 2 },
+            { label: "محدود قليلاً", value: 3 },
+            { label: "لا يوجد قيود", value: 4 }
+          ]
+        },
+        {
+          key: "nutrition",
+          question: "5. التغذية (Nutrition)",
+          options: [
+            { label: "سيئة جدًا (محاليل فقط)", value: 1 },
+            { label: "غير كافية (أنبوب تغذية)", value: 2 },
+            { label: "كافية", value: 3 },
+            { label: "ممتازة", value: 4 }
+          ]
+        },
+        {
+          key: "friction",
+          question: "6. الاحتكاك والانزلاق (Friction & Shear)",
+          options: [
+            { label: "ينزلق ويتطلب مساعدة كبيرة", value: 1 },
+            { label: "يحتاج مساعدة بسيطة", value: 2 },
+            { label: "لا توجد مشكلة", value: 3 }
+          ]
+        }
+      ];
+
+      const handleAnswer = (value) => {
+        const currentQuestion = bradenQuestions[currentQuestionIndex];
+        const newAnswers = { ...userAnswers, [currentQuestion.key]: value };
+        setUserAnswers(newAnswers);
+
+        if (currentQuestionIndex < bradenQuestions.length - 1) {
+          setCurrentQuestionIndex(currentQuestionIndex + 1);
+        } else {
+          calculateScore(newAnswers);
+        }
+      };
+
+      const calculateScore = (answers) => {
+        const values = Object.values(answers);
+        const totalScore = values.reduce((sum, value) => sum + value, 0);
+        setScore(totalScore);
+
+        let risk = "";
+        let nursingInstructions = "";
+
+        if (totalScore <= 9) {
+          risk = "خطر شديد جدًا (Very High Risk)";
+          nursingInstructions = `
+            تعليمات تمريضية :
+            - قلب المريض كل ساعتين.
+            - استخدم مرتبة ضغط هواء (Air mattress).
+            - فحص الجلد يوميًا (كل بداية شفت).
+            - ترطيب الجلد واستخدام كريمات.
+          `;
+        } else if (totalScore <= 12) {
+          risk = "خطر شديد (High Risk)";
+          nursingInstructions = `
+             تعليمات تمريضية :
+            - قلب المريض كل 3 ساعات.
+            - راقب مناطق الضغط.
+            - الحفاظ على جفاف الجلد.
+            - تغذية جيدة.
+          `;
+        } else if (totalScore <= 14) {
+          risk = "خطر متوسط (Moderate Risk)";
+          nursingInstructions = `
+            تعليمات تمريضية :
+            - فحص الجلد عند كل بداية شفت تمريضي.
+            - استخدم وسادات ناعمة.
+            - تشجيع على الحركة إن أمكن.
+          `;
+        } else if (totalScore <= 18) {
+          risk = "خطر بسيط (At Risk)";
+          nursingInstructions = `
+            تعليمات تمريضية :
+            - تعليم المريض الحركة الذاتية.
+            - تقليل الرطوبة تحت المريض.
+            - فحص دوري لمناطق الضغط.
+          `;
+        } else {
+          risk = "لا يوجد خطر (No Risk)";
+          nursingInstructions = `
+             المريض لا يعاني من خطر قرح الفراش حاليًا.
+            - يُفضل المتابعة الدورية والوقاية الروتينية.
+          `;
+        }
+
+        setRiskLevel(risk);
+        setInstructions(nursingInstructions);
+      };
+
+      const resetCalculator = () => {
+        setCurrentQuestionIndex(0);
+        setUserAnswers({});
+        setScore(null);
+        setRiskLevel('');
+        setInstructions('');
+      };
+
+      return (
+        <div className="tab-content" id="braden-score">
+          <div className="calculator-container">
+            <h2>حاسبة Braden Score لتقييم قرح الفراش</h2>
+            
+            {score === null ? (
+              <>
+                <div className="form-group">
+                  <h3 className="text-lg font-semibold mb-4 text-primary-color">
+                    {bradenQuestions[currentQuestionIndex].question}
+                  </h3>
+                  <div className="space-y-3">
+                    {bradenQuestions[currentQuestionIndex].options.map((option, index) => (
+                      <button
+                        key={index}
+                        className="w-full text-right p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                        onClick={() => handleAnswer(option.value)}
+                      >
+                        {option.label} ({option.value} نقطة)
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 text-gray-600">
+                  التقدم: {currentQuestionIndex + 1} / {bradenQuestions.length}
+                </div>
+              </>
+            ) : (
+              <div className="result-container">
+                <h3>النتائج:</h3>
+                <div className="result-grid">
+                  <div className="result-card">
+                    <span className="result-label">النتيجة الكلية:</span>
+                    <span className="result-value" style={{ color: 'var(--success-color)' }}>{score}</span>
+                  </div>
+                  <div className="result-card">
+                    <span className="result-label">مستوى الخطورة:</span>
+                    <span className="result-value" style={{ color: 'var(--success-color)' }}>{riskLevel}</span>
+                  </div>
+                </div>
+                <div className="result-text" style={{ whiteSpace: 'pre-line' }}>
+                  {instructions}
+                </div>
+                <button 
+                  onClick={resetCalculator}
+                  className="calculate-btn mt-4"
+                >
+                  إعادة الحساب
+                </button>
+                <div className="disclaimer">
+                  هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // DKAInitiation Component
+    const DKAInitiation = () => {
+      const [result, setResult] = useState('');
+      const inpArr = [
+        { label: 'الوزن (كجم)', type: 'number', name: 'bodyweight' },
+      ];
+
+      const handleSubmit = (values, errors) => {
+        if (errors) {
+          setResult('');
+          return;
+        }
+        setResult(
+          Math.round(values.bodyweight / 10) >= 15
+            ? 15
+            : Math.round(values.bodyweight / 5) / 2
+        );
+      };
+
+      return (
+        <div className="tab-content" id="dka-initiation">
+          <div className="calculator-container">
+            <div id="inst">
+              <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
+              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر جميع الأنابيب لضمان تفريغ الهواء</div>
+              <div className="instructions">تحضير 500 مل من D10 في غرفة المريض كإجراء احترازي للتدخل في حالة  hypoglycemia </div>
+            </div>
+            <MyForm
+              buttText="حساب"
+              inputArr={inpArr}
+              title="بدء علاج DKA"
+              type="DKAInitiation"
+              handleSub={handleSubmit}
+            />
+            <div className="result-container" style={{ display: result ? 'block' : 'none' }}>
+              <h3>النتائج:</h3>
+              <div className="result-grid">
+                <div className="result-card">
+                  <span className="result-label">معدل الحقن (مل/ساعة):</span>
+                  <span className="result-value" style={{ color: 'var(--success-color)' }}>{result}</span>
+                </div>
+              </div>
+              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // DKAModification Component
+    const DKAModification = () => {
+      const [result, setResult] = useState('');
+      const [result2, setResult2] = useState('');
+      const inpArr = [
+        { label: 'الوزن (كجم)', type: 'number', name: 'bodyweight' },
+        { label: 'CBG السابق (ملج%)', type: 'number', name: 'previouscbg', style: { color: 'red' } },
+        { label: 'CBG الحالي (ملج%)', type: 'number', name: 'currentcbg' },
+        { label: 'المعدل الحالي (مل/ساعة)', type: 'number', name: 'currentrate' },
+      ];
+
+      const handleSubmit = (values, errors) => {
+        if (errors) {
+          setResult('');
+          setResult2('');
+          return;
+        }
+        if (values.currentcbg < 100) {
+          setResult(
+            `إيقاف الأنسولين وإعطاء 100 مل D10، إعادة الفحص كل 30 دقيقة، إعطاء 100 مل D10 مرة أخرى إذا كان لا يزال < 100. عندما يكون CBG > 140 ملج%، استأنف الأنسولين بمعدل ${Math.round(values.currentrate * 0.5)} مل/ساعة`
+          );
+          return;
+        }
+        if (values.currentcbg <= 250) {
+          const newRate = Math.floor(0.05 * values.bodyweight);
+          if (newRate > 15) {
+            setResult('المعدل الجديد أكبر من 15 مل/ساعة، يرجى التواصل مع الطبيب المختص');
+            if (values.currentcbg > 300) {
+              setResult2('فحص الأسيتون في البول');
+            }
+          } else {
+            setResult(`تقليل المعدل إلى ${newRate} مل/ساعة`);
+            setResult2('إضافة D10 بمعدل 125 مل/ساعة (ضبط معدل NaCl)');
+          }
+          return;
+        }
+        let diffCbg = values.currentcbg - values.previouscbg;
+        if (diffCbg > -50) {
+          const newRate = values.currentrate * 2;
+          if (newRate > 15) {
+            setResult('المعدل الجديد أكبر من 15 مل/ساعة، يرجى التواصل مع الطبيب المختص');
+            setResult2(values.currentcbg > 300 ? 'فحص الأسيتون في البول' : '');
+          } else {
+            setResult(`تعديل المعدل إلى ${newRate} مل/ساعة`);
+            setResult2('');
+          }
+        } else if (diffCbg > -100) {
+          setResult('لا تغيير');
+          setResult2('');
+        }
+      };
+
+      return (
+        <div className="tab-content" id="dka-modification">
+          <div className="calculator-container">
+            <div id="inst">
+              <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
+              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر جميع الأنابيب لضمان تفريغ الهواء</div>
+              <div className="instructions">تحضير 500 مل من D10 في غرفة المريض كإجراء احترازي للتدخل في حالة hypoglycemia</div>
+            </div>
+            <MyForm
+              buttText="حساب"
+              inputArr={inpArr}
+              title="تعديل DKA"
+              type="DKAModification"
+              handleSub={handleSubmit}
+            />
+            <div className="result-container" style={{ display: result || result2 ? 'block' : 'none' }}>
+              <h3>النتائج:</h3>
+              <div className="result-text" style={{ color: 'var(--success-color)' }}>{result}</div>
+              {result2 && <div className="result-text" style={{ color: 'var(--success-color)' }}>{result2}</div>}
+              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // HICInitialization Component
+    const HICInitialization = () => {
+      const [initBResult, setInitBResult] = useState('');
+      const [initRResult, setInitRResult] = useState('');
+      const inpArr = [
+        { label: 'الوزن (كجم)', type: 'number', name: 'bodyweight' },
+        { label: 'الطول (سم)', type: 'number', name: 'height' },
+        {
+          label: 'الجنس',
+          type: 'radio',
+          name: 'gender',
+          radioOne: 'ذكر',
+          radioTwo: 'أنثى',
+        },
+      ];
+
+      const handleSubmit = (values, errors) => {
+        if (errors) {
+          setInitBResult('');
+          setInitRResult('');
+          return;
+        }
+        const usedBodyWeight = () => {
+          let BMI = values.bodyweight / Math.pow(values.height / 100, 2);
+          let IBW =
+            values.gender === 'ذكر'
+              ? 50 + 2.3 * ((values.height - 152.4) * 0.393700787)
+              : 45.5 + 2.3 * ((values.height - 152.4) * 0.393700787);
+          return BMI < 30 ? values.bodyweight : 0.4 * (values.bodyweight - IBW) + IBW;
+        };
+        let usedBW = usedBodyWeight();
+        setInitBResult(Math.round((80 * usedBW / 100) / 5) * 5);
+        setInitRResult(Math.round(18 * usedBW / 100));
+      };
+
+      return (
+        <div className="tab-content" id="hic-initialization">
+          <div className="calculator-container">
+            <div id="inst">
+              <div className="instructions">إعداد الهيبارين بإضافة 5000 وحدة إلى 49 مل من المحلول الملحي العادي (100 وحدة/مل)</div>
+            </div>
+            <MyForm
+              buttText="حساب"
+              inputArr={inpArr}
+              title="بدء علاج الهيبارين"
+              type="HICInitialization"
+              handleSub={handleSubmit}
+            />
+            <div className="result-container" style={{ display: initBResult || initRResult ? 'block' : 'none' }}>
+              <h3>النتائج:</h3>
+              <div className="result-grid">
+                <div className="result-card">
+                  <span className="result-label">الجرعة الأولية (مل):</span>
+                  <span className="result-value" style={{ color: 'var(--success-color)' }}>{initBResult}</span>
+                </div>
+                <div className="result-card">
+                  <span className="result-label">المعدل الأولي (مل/ساعة):</span>
+                  <span className="result-value" style={{ color: 'var(--success-color)' }}>{initRResult}</span>
+                </div>
+              </div>
+              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // HICModification Component
+    const HICModification = () => {
+      const [extraBolusR, setExtraBolusR] = useState('');
+      const [changingRateR, setChangingRateR] = useState('');
+      const inpArr = [
+        { label: 'الوزن (كجم)', type: 'number', name: 'bodyweight' },
+        { label: 'الطول (سم)', type: 'number', name: 'height' },
+        { label: 'aPTT (ثانية)', type: 'number', name: 'aptt' },
+        { label: 'المعدل الحالي (مل/ساعة)', type: 'number', name: 'currentratee' },
+        {
+          label: 'الجنس',
+          type: 'radio',
+          name: 'gender',
+          radioOne: 'ذكر',
+          radioTwo: 'أنثى',
+        },
+      ];
+
+      const handleSubmit = (values, errors) => {
+        if (errors) {
+          setExtraBolusR('');
+          setChangingRateR('');
+          return;
+        }
+        const usedBodyWeight = () => {
+          let BMI = values.bodyweight / Math.pow(values.height / 100, 2);
+          let IBW =
+            values.gender === 'ذكر'
+              ? 50 + 2.3 * ((values.height - 152.4) * 0.393700787)
+              : 45.5 + 2.3 * ((values.height - 152.4) * 0.393700787);
+          return BMI < 30 ? values.bodyweight : 0.4 * (values.bodyweight - IBW) + IBW;
+        };
+        let usedBW = usedBodyWeight();
+        let extraBolus = 0;
+        let changingRate = 0;
+        if (values.aptt < 35) {
+          extraBolus = 80 * usedBW / 100;
+          changingRate = Math.round(4 * Number(usedBW) / 100 + Number(values.currentratee));
+        } else if (values.aptt < 46) {
+          extraBolus = 40 * usedBW / 100;
+          changingRate = Math.round(2 * Number(usedBW) / 100 + Number(values.currentratee));
+        } else if (values.aptt < 71) {
+          changingRate = 'لا تغيير';
+        } else if (values.aptt < 91) {
+          changingRate = Math.round(Number(values.currentratee) - 2 * Number(usedBW) / 100);
+        } else {
+          changingRate = `إيقاف التسريب لمدة ساعة واحدة ثم استئناف بمعدل ${Math.round(Number(values.currentratee) - 3 * Number(usedBW) / 100)}`;
+        }
+        setExtraBolusR(`الجرعة الإضافية = ${Math.round(extraBolus / 5) * 5}`);
+        setChangingRateR(`تغيير المعدل = ${changingRate}`);
+      };
+
+      return (
+        <div className="tab-content" id="hic-modification">
+          <div className="calculator-container">
+            <div id="inst">
+              <div className="instructions">إعداد الهيبارين بإضافة 5000 وحدة إلى 49 مل من المحلول الملحي العادي (100 وحدة/مل)</div>
+            </div>
+            <MyForm
+              buttText="حساب"
+              inputArr={inpArr}
+              title="تعديل الهيبارين"
+              type="HICModification"
+              handleSub={handleSubmit}
+            />
+            <div className="result-container" style={{ display: extraBolusR || changingRateR ? 'block' : 'none' }}>
+              <h3>النتائج:</h3>
+              <div className="result-text" style={{ color: 'var(--success-color)' }}>{changingRateR}</div>
+              <div className="result-text" style={{ color: 'var(--success-color)' }}>{extraBolusR}</div>
+              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // IICInitiation Component
+    const IICInitiation = () => {
+      const [initbResult, setInitbResult] = useState('');
+      const [initrResult, setInitrResult] = useState('');
+      const [resultsElement, setResultsElement] = useState('');
+      const roundHalf = (num) => Math.round(num * 2) / 2;
+
+      const handleSubmit = (values, errors) => {
+        if (errors) {
+          setInitbResult('');
+          setInitrResult('');
+          setResultsElement('');
+          return;
+        }
+        let x = roundHalf(values.currentcbg / 100);
+        if (values.currentcbg < 180) {
+          setInitbResult('غير متاح');
+          setInitrResult('غير متاح');
+          setResultsElement('');
+        } else if (values.currentcbg < 300) {
+          setInitrResult(x);
+          setInitbResult('غير متاح');
+          setResultsElement('');
+        } else {
+          setInitrResult(x);
+          setInitbResult(Math.floor(values.currentcbg / 100 / 0.5) * 0.5);
+          setResultsElement('فحص الأسيتون في البول');
+        }
+      };
+
+      const inpArr = [
+        { label: 'CBG الحالي (ملج%)', type: 'number', name: 'currentcbg' },
+      ];
+
+      return (
+        <div className="tab-content" id="iic-initiation">
+          <div className="calculator-container">
+            <div id="inst">
+              <div className="instructions">بدء تسريب الأنسولين إذا كان أكثر من 180 ملج/ديسيلتر في مريض السكري</div>
+              <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
+              <div className="instructions">قبل التوصيل، اغسل 20 مل من التسريب عبر جميع الأنابيب</div>
+            </div>
+            <MyForm
+              buttText="حساب"
+              inputArr={inpArr}
+              title="بدء علاج الأنسولين (غير DKA)"
+              type="IICInitiation"
+              handleSub={handleSubmit}
+            />
+            <div className="result-container" style={{ display: initbResult || initrResult || resultsElement ? 'block' : 'none' }}>
+              <h3>النتائج:</h3>
+              <div className="result-grid">
+                <div className="result-card">
+                  <span className="result-label">الجرعة الأولية (مل):</span>
+                  <span className="result-value" style={{ color: 'var(--success-color)' }}>{initbResult}</span>
+                </div>
+                <div className="result-card">
+                  <span className="result-label">المعدل الأولي (مل/ساعة):</span>
+                  <span className="result-value" style={{ color: 'var(--success-color)' }}>{initrResult}</span>
+                </div>
+              </div>
+              {resultsElement && (
+                <div className="result-text" style={{ color: 'var(--success-color)' }}>{resultsElement}</div>
+              )}
+              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // IICMaintenance Component
+    const IICMaintenance = () => {
+      const [resultsElement, setResultsElement] = useState('');
+      const [resultsElement2, setResultsElement2] = useState('');
+      const roundHalf = (num) => Math.round(num * 2) / 2;
+
+      const handleSubmit = (values, errors) => {
+        if (errors) {
+          setResultsElement('');
+          setResultsElement2('');
+          return;
+        }
+        const calculateDelta = () => {
+          let currentRateMaint = values.currentrate;
+          if (currentRateMaint < 3) return 0.5;
+          if (currentRateMaint < 6.5) return 1;
+          if (currentRateMaint < 10) return 1.5;
+          if (currentRateMaint < 15) return 2;
+          if (currentRateMaint < 20) return 3;
+          return 4;
+        };
+        const delta = roundHalf(calculateDelta());
+        const currCBG = values.currentcbg;
+        const prevCBG = values.previouscbg;
+        const currRate = values.currentrate;
+        let differenceCBG = currCBG - prevCBG;
+        let y = 0;
+        if (currCBG < 80) {
+          setResultsElement(
+            `إيقاف الأنسولين وإعطاء 100 مل D10، إعادة الفحص كل 15 دقيقة، إعطاء 100 مل D10 مرة أخرى إذا كان لا يزال < 100. عندما يكون CBG > 140 ملج%، ${
+              currRate * 0.5 < 0.5
+                ? 'إبلاغ الطبيب المسؤول'
+                : `استأنف الأنسولين بمعدل ${Math.round(currRate * 0.5)} مل/ساعة`
+            }`
+          );
+        } else if (currCBG < 100) {
+          setResultsElement(
+            `إيقاف الأنسولين وإعطاء 100 مل D10، إعادة الفحص كل 30 دقيقة، إعطاء 100 مل D10 مرة أخرى إذا كان لا يزال < 100. عندما يكون CBG > 140 ملج%، ${
+              currRate * 0.5 < 0.5
+                ? 'إبلاغ الطبيب المسؤول'
+                : `استأنف الأنسولين بمعدل ${Math.round(currRate * 0.5)} مل/ساعة`
+            }`
+          );
+        } else if (currCBG >= 100 && currCBG <= 139) {
+          if (differenceCBG > 0) {
+            setResultsElement('لا تغيير');
+          } else if (differenceCBG <= 0 && differenceCBG >= -20) {
+            y = Number(currRate) - delta;
+            setResultsElement(
+              y < 0.5 ? 'إبلاغ الطبيب المسؤول' : `تقليل المعدل إلى ${y} مل/ساعة`
+            );
+          } else {
+            setResultsElement(
+              `إيقاف الأنسولين -> CBG/30 دقيقة -> عندما يكون CBG > 140 ملج/ديسيلتر -> ${
+                0.5 * currRate < 0.5
+                  ? 'إبلاغ الطبيب المسؤول'
+                  : `إعادة التشغيل بمعدل = ${roundHalf(0.5 * currRate)} مل/ساعة (إذا بدأ CBG في الزيادة، تحقق كل ساعة حتى > 140)`
+              }`
+            );
+          }
+        } else if (currCBG >= 140 && currCBG <= 159) {
+          if (differenceCBG > 40) {
+            y = Number(currRate) + delta;
+            setResultsElement(
+              y <= 20
+                ? `زيادة المعدل إلى ${y} مل/ساعة`
+                : 'المعدل الجديد أكبر من 20 مل/ساعة، يرجى التواصل مع الطبيب المختص'
+            );
+          } else if (differenceCBG >= -20) {
+            setResultsElement('لا تغيير');
+          } else if (differenceCBG >= -40) {
+            y = Number(currRate) - delta;
+            setResultsElement(
+              y < 0.5
+                ? 'إبلاغ الطبيب المسؤول'
+                : `تقليل المعدل إلى ${y} مل/ساعة`
+            );
+          } else {
+            y = Number(currRate) - 2 * delta;
+            setResultsElement(
+              `إيقاف الأنسولين، كرر CBG كل 30 دقيقة، عندما يبدأ في الزيادة وCBG >= 140 ${
+                y < 0.5 ? 'إبلاغ الطبيب المسؤول' : `إعادة التشغيل بمعدل = ${y} مل/ساعة`
+              }`
+            );
+          }
+        } else if (currCBG >= 160 && currCBG <= 200) {
+          if (differenceCBG > 60) {
+            y = Number(currRate) + 2 * delta;
+            setResultsElement(
+              y <= 20
+                ? `زيادة المعدل إلى ${y} مل/ساعة`
+                : 'المعدل الجديد أكبر من 20 مل/ساعة، يرجى التواصل مع الطبيب المختص'
+            );
+          } else if (differenceCBG >= 0) {
+            y = Number(currRate) + delta;
+            setResultsElement(
+              y <= 20
+                ? `زيادة المعدل إلى ${y} مل/ساعة`
+                : 'المعدل الجديد أكبر من 20 مل/ساعة، يرجى التواصل مع الطبيب المختص'
+            );
+          } else if (differenceCBG >= -40) {
+            setResultsElement('لا تغيير');
+          } else if (differenceCBG >= -60) {
+            y = Number(currRate) - delta;
+            setResultsElement(
+              y < 0.5
+                ? 'إبلاغ الطبيب المسؤول'
+                : `تقليل المعدل إلى ${y} مل/ساعة`
+            );
+          } else {
+            y = Number(currRate) - 2 * delta;
+            setResultsElement(
+              `إيقاف الأنسولين، كرر CBG كل 60 دقيقة، عندما يبدأ في الزيادة وCBG >= 140 ${
+                y < 0.5 ? 'إبلاغ الطبيب المسؤول' : `إعادة التشغيل بمعدل = ${y} مل/ساعة`
+              }`
+            );
+          }
+        } else {
+          if (differenceCBG > 0) {
+            y = Number(currRate) + 2 * delta;
+            setResultsElement(
+              y <= 20
+                ? `زيادة المعدل إلى ${y} مل/ساعة`
+                : 'المعدل الجديد أكبر من 20 مل/ساعة، يرجى التواصل مع الطبيب المختص'
+            );
+          } else if (differenceCBG >= -20) {
+            y = Number(currRate) + delta;
+            setResultsElement(
+              y <= 20
+                ? `زيادة المعدل إلى ${y} مل/ساعة`
+                : 'المعدل الجديد أكبر من 20 مل/ساعة، يرجى التواصل مع الطبيب المختص'
+            );
+          } else if (differenceCBG >= -60) {
+            setResultsElement('لا تغيير');
+          } else if (differenceCBG >= -80) {
+            y = Number(currRate) - delta;
+            setResultsElement(
+              y < 0.5
+                ? 'إبلاغ الطبيب المسؤول'
+                : `تقليل المعدل إلى ${y} مل/ساعة`
+            );
+          } else {
+            y = Number(currRate) - 2 * delta;
+            setResultsElement(
+              `إيقاف الأنسولين، كرر CBG كل 60 دقيقة، عندما يبدأ في الزيادة وCBG >= 140 ${
+                y < 0.5 ? 'إبلاغ الطبيب المسؤول' : `إعادة التشغيل بمعدل = ${y} مل/ساعة`
+              }`
+            );
+          }
+        }
+        if (currCBG > 300) {
+          setResultsElement2('فحص الأسيتون في البول');
+        }
+      };
+
+      const inpArr = [
+        { label: 'CBG السابق (ملج%)', type: 'number', name: 'previouscbg', style: { color: 'red' } },
+        { label: 'CBG الحالي (ملج%)', type: 'number', name: 'currentcbg' },
+        { label: 'المعدل الحالي (مل/ساعة)', type: 'number', name: 'currentrate' },
+      ];
+
+      return (
+        <div className="tab-content" id="iic-maintenance">
+          <div className="calculator-container">
+            <div id="inst">
+              <div className="instructions">بدء تسريب الأنسولين إذا كان أكثر من 180 ملج/ديسيلتر في مريض السكري</div>
+              <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
+              <div className="instructions">قبل التوصيل، اغسل 20 مل من التسريب عبر جميع الأنابيب</div>
+            </div>
+            <MyForm
+              buttText="حساب"
+              inputArr={inpArr}
+              title="صيانة الأنسولين (غير DKA)"
+              type="IICMaintenance"
+              handleSub={handleSubmit}
+            />
+            <div className="result-container" style={{ display: resultsElement || resultsElement2 ? 'block' : 'none' }}>
+              <h3>النتائج:</h3>
+              <div className="result-text" style={{ color: 'var(--success-color)' }}>{resultsElement}</div>
+              {resultsElement2 && (
+                <div className="result-text" style={{ color: 'var(--success-color)' }}>{resultsElement2}</div>
+              )}
+              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Dropdown Component
+    const CalculatorDropdown = ({ title, items, activeTab, setActiveTab }) => {
+      const [isOpen, setIsOpen] = useState(false);
+
+      return (
+        <div className="dropdown relative">
+          <button
+            className="dropdown-toggle w-full text-right px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {title}
+            <svg
+              className={`ml-2 h-5 w-5 inline transition-transform ${isOpen ? 'transform rotate-180' : ''}`}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+          {isOpen && (
+            <div className="dropdown-menu absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+              <div className="py-1">
+                {items.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`block w-full text-right px-4 py-2 text-sm ${activeTab === item.id ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-100'}`}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setIsOpen(false);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // NewFeature Component
+const NewFeature = () => {
+  // تاريخ الإطلاق المخطط له (يمكن تعديله)
+  const launchDate = new Date("2025-09-30T00:00:00");
+  
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
+
+  const [isLaunched, setIsLaunched] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const diff = launchDate - now;
+
+      if (diff <= 0) {
+        setIsLaunched(true);
+        clearInterval(timer);
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="tab-content" id="new-feature">
+      <div className="calculator-container">
+        <h2>ميزة جديدة قريبًا</h2>
+        
+        {isLaunched ? (
+          <div className="coming-soon-banner">
+             الميزة الجديدة متاحة الآن! جاري التحميل...
+          </div>
+        ) : (
+          <>
+            <div className="coming-soon-banner">
+               جاري العمل على هذه الميزة، ستنطلق قريبًا!
+            </div>
+            
+            <div className="timer-container">
+              <div className="timer-box">
+                <div className="timer-value">{timeLeft.days}</div>
+                <div className="timer-label">أيام</div>
+              </div>
+              <div className="timer-box">
+                <div className="timer-value">{timeLeft.hours}</div>
+                <div className="timer-label">ساعات</div>
+              </div>
+              <div className="timer-box">
+                <div className="timer-value">{timeLeft.minutes}</div>
+                <div className="timer-label">دقائق</div>
+              </div>
+              <div className="timer-box">
+                <div className="timer-value">{timeLeft.seconds}</div>
+                <div className="timer-label">ثواني</div>
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="instructions">
+          <h4>حول هذه الميزة:</h4>
+          <p>
+            هذه الميزة ستكون حاسبة متقدمة لـ [حاسبة تحليل غازات الدم (ABG)]. نحن نعمل بجد لتقديمها بأفضل صورة.
+          </p>
+          <ul className="mr-4 mt-2" style={{ listStyleType: 'disc' }}>
+            <li>تحليل فوري للنتائج : [دخل قيم مثل pH، PaCO₂، HCO₃، وPaO₂، واحصل على التفسير الفسيولوجي للحالة]</li>
+            <li>تحديد نوع الاضطراب : [تمييز بين الاضطرابات الحادة والمزمنة، والتعويضات الجزئية أو الكاملة.]</li>
+            <li>واجهة سهلة الاستخدام : [تصميم بسيط يسمح بإدخال البيانات من أي جهاز بدون تعقيد.]</li>
+          </ul>
+        </div>
+
+        <div className="disclaimer">
+          يمكنك متابعة تحديثاتنا على وسائل التواصل الاجتماعي للاطلاع على آخر التطورات.
+        </div>
+      </div>
+    </div>
+  );
+};
+    // Main App Component
+    const App = () => {
+  const [activeTab, setActiveTab] = useState('iic-initiation');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  const calculators = [
+    {
+      title: 'حاسبة الأنسولين (Non-DKA)',
+      items: [
+        { id: 'iic-initiation', label: 'بداية العلاج' },
+        { id: 'iic-maintenance', label: 'تعديل الجرعة' }
+      ]
+    },
+    {
+      title: 'حاسبة الأنسولين (DKA)',
+      items: [
+        { id: 'dka-initiation', label: 'بداية العلاج' },
+        { id: 'dka-modification', label: 'تعديل الجرعة' }
+      ]
+    },
+    {
+      title: 'حاسبة الهيبارين',
+      items: [
+        { id: 'hic-initialization', label: 'بداية العلاج' },
+        { id: 'hic-modification', label: 'تعديل الجرعة' }
+      ]
+    },
+    {
+      title: 'حاسبة احتمالية حدوث قرح الفراش',
+      items: [
+        { id: 'braden-score', label: 'Braden Score' }
+      ]
+    },
+    {
+      title: 'حاسبة السوائل',
+      items: [
+        { id: 'fluid-flow-rate', label: 'معدل تدفق السوائل' }
+      ]
+    },
+    {
+      title: 'حاسبة تحليل غازات الدم',
+      items: [
+        { id: 'new-feature', label: 'ميزة جديدة', comingSoon: true }
+      ]
+    },
+    {
+      title: 'حاسبة NEWS',
+      items: [
+        { id: 'news-score', label: 'National Early Warning Score' }
+      ]
+    },
+  ];
+
+  const showActiveTab = (tabId) => {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    document.getElementById(tabId).classList.add('active');
+    setMobileMenuOpen(false);
+  };
+
+  useEffect(() => {
+    showActiveTab(activeTab);
+  }, [activeTab]);
+
+  return (
+    <ErrorBoundary>
+      <div className="app-container">
+        <header className="app-header">
+          <div className="header-content">
+            <div className="flex justify-between items-center">
+              <button 
+                className="md:hidden text-white p-2 order-1"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <div className="header-title order-2">
+                <h1>كالكوميدك | Calcumedic</h1>
+                <p className="subtitle">الدقةُ في الأمرِ إن سادتْ، سمتْ بهِ.</p>
+              </div>
+            </div>
+            
+            <nav className={`mobile-menu ${mobileMenuOpen ? 'mobile-menu-open' : 'mobile-menu-closed'} md:block mt-4`}>
+              <div className="flex flex-col md:flex-row flex-wrap gap-2">
+                {calculators.map((calculator) => (
+                  <CalculatorDropdown
+                    key={calculator.title}
+                    title={calculator.title}
+                    items={calculator.items}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  />
+                ))}
+              </div>
+            </nav>
+          </div>
+        </header>
+        
+        <main className="content-area">
+          <HICInitialization />
+          <HICModification />
+          <IICInitiation />
+          <IICMaintenance />
+          <DKAInitiation />
+          <DKAModification />
+          <BradenScore />
+          <FluidFlowRate />
+          <NewFeature />
+          <NEWSScore />
+        </main>
+        
+        <footer className="app-footer">
+          <div className="footer-content">
+            <p>© 2025 Medical Intensive care</p>
+            <p className="version">version 1.0.0</p>
+          </div>
+        </footer>
+      </div>
+    </ErrorBoundary>
+  );
+};
+
+    // Render the App
+    try {
+      ReactDOM.render(<App />, document.getElementById('root'));
+    } catch (error) {
+      console.error('Rendering error:', error);
+      document.getElementById('root').innerHTML = '<div class="text-danger-color text-center p-4">حدث خطأ في تحميل التطبيق، يرجى إعادة المحاولة</div>';
+    }
+  </script>
+</body>
+</html>
