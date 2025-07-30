@@ -1,0 +1,556 @@
+/* Base Styles */
+:root {
+  --primary-color: #097268;
+  --secondary-color: #248883;
+  --accent-color: #B98C2E;
+  --light-color: #f5f7fa;
+  --dark-color: #2c3e50;
+  --success-color: #097268;
+  --warning-color: #B98C2E;
+  --danger-color: #D88573;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Cairo', sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+  line-height: 1.6;
+  direction: rtl;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header Styles */
+.app-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1.5rem;
+  box-shadow: var(--box-shadow);
+}
+
+.header-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* Navigation Styles */
+.dropdown {
+  z-index: 10;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  transition: var(--transition);
+}
+
+.dropdown-toggle:hover {
+  background-color: rgba(36, 136, 131, 0.1);
+}
+
+.dropdown-menu {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+.dropdown-menu button {
+  width: 100%;
+  text-align: right;
+  padding: 0.75rem 1rem;
+  transition: var(--transition);
+}
+
+.dropdown-menu button:hover {
+  background-color: rgba(36, 136, 131, 0.1);
+}
+
+/* Main Content */
+.content-area {
+  flex: 1;
+  padding: 1rem;
+  background-color: #f5f7fa;
+}
+
+.tab-content {
+  display: none;
+  animation: fadeIn 0.5s ease;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Calculator Container */
+.calculator-container {
+  max-width: 100%;
+  margin: 1rem auto;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 1.5rem;
+}
+
+.calculator-container h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.instructions {
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+}
+
+/* Form Styles */
+.medical-form {
+  margin-top: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 150px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-family: 'Cairo', sans-serif;
+  transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 2px rgba(36, 136, 131, 0.2);
+}
+
+/* Radio Input Styles */
+.form-group input[type="radio"] {
+  width: auto;
+    box-shadow: none;
+
+  margin-left: 0.5rem;
+  
+}
+
+/* Button Styles */
+.calculate-btn {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-family: 'Cairo', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.calculate-btn:hover {
+  background-color: #9a7426;
+  transform: translateY(-2px);
+}
+
+.calculate-btn:active {
+  transform: translateY(0);
+}
+
+/* Results Section */
+.result-container {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+ /* border-right:  4px solid var(--secondary-color);*/
+    border:  2px dashed var(--secondary-color);
+  
+}
+
+.result-container h3 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.result-card {
+  background-color: white;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.result-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.result-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.result-text {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+}
+
+/* Disclaimer */
+.disclaimer {
+  margin-top: 1.5rem;
+  padding: 0.5rem;
+  background-color: #fff8e1;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  color: #e65100;
+ /* border-right:   4px solid #ffc107;*/
+  
+  border: 2px dashed #ffc107;
+  border-right:  2px dashed var(--secondary-color);
+  border-left:  2px dashed var(--secondary-color);
+}
+
+/* Footer Styles */
+.app-footer {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.version {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.5rem;
+  }
+  
+  .header-content h1 {
+    font-size: 1.5rem;
+    /*    font-size: 1rem;
+*/
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .dropdown-menu {
+    position: static;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .calculator-container {
+    padding: 1rem;
+  }
+  
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .calculate-btn {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .calculator-container h2 {
+    font-size: 1.2rem;
+  }
+  
+  .form-group {
+    min-width: 100%;
+  }
+}
+
+/* تحسين محاذاة السهم في القوائم المنسدلة */
+.dropdown-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+}
+
+/* جعل السهم في نهاية التبويب */
+.dropdown-toggle svg {
+  margin-right: auto;
+  margin-left: 8px;
+  order: 1; /* يجعل السهم يأتي في النهاية */
+}
+
+.dropdown-toggle span {
+  order: 2; /* يجعل النص يأتي قبل السهم */
+}
+
+/* تنسيق التبويب النشط باللون الأحمر */
+.tab-item.active {
+  color: var(--accent-color)!important;
+  border-bottom-color: var(--accent-color) !important;
+  background-color:var(--box-shadow) !important;
+}
+
+/* تأثير hover للتبويب النشط */
+.tab-item.active:hover {
+  background-color: var(--box-shadow) !important;
+}
+
+/* تعديلات إضافية للقوائم المنسدلة */
+.dropdown-menu button.active {
+  color: var(--accent-color);
+  background-color: var(--box-shadow);
+}
+/* تحسين القوائم المنسدلة للهواتف */
+@media (max-width: 768px) {
+  .dropdown {
+    width: 100%;
+  }
+  
+  .dropdown-toggle {
+    width: 100%;
+    text-align: right;
+    padding: 0.75rem 1rem;
+  }
+  
+  .dropdown-menu {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 0.25rem;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .dropdown-menu button {
+    padding: 0.75rem 1rem;
+    text-align: right;
+  }
+  
+  /* منع التداخل بين القوائم */
+  .dropdown + .dropdown {
+    margin-top: 0.5rem;
+  }
+}
+
+
+/* أضف هذا لملف styles.css */
+.flex-col.gap-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.flex.items-center.gap-2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.result-text h4 {
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+
+/* أضف هذا في ملف CSS الخاص بك */
+.focus\:ring-indigo-500:focus {
+  --tw-ring-color: var(--accent-color) !important;
+}
+
+/* Timer Styles */
+.timer-container {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.timer-box {
+  background: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  min-width: 80px;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+}
+
+.timer-value {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.timer-label {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.coming-soon-banner {
+  background: linear-gradient(135deg, var(--accent-color), #d4a017);
+  color: white;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  margin: 1rem 0;
+  font-weight: bold;
+  box-shadow: var(--box-shadow);
+}
+
+
+/* تعديل محاذاة زر الهامبرغر */
+.app-header .flex.justify-between.items-center {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.app-header button.md\:hidden {
+  margin-right: 0;
+  margin-left: auto; /* يضمن وضع الزر على اليمين في بيئة RTL */
+  padding: 0.5rem;
+}
+
+/* تحسين الـ navigation في وضع الهاتف */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.75rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+  }
+
+  .app-header button.md\:hidden {
+    order: 1; /* يضمن ظهور الزر على اليمين */
+  }
+
+  .app-header .order-2 {
+    text-align: right; /* محاذاة النص إلى اليمين */
+  }
+
+  nav.block {
+    margin-top: 1rem;
+    background-color: var(--primary-color);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+  }
+}
+
+/* محاذاة العنوان والوصف في المنتصف */
+.header-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-grow: 1; /* يسمح للعنوان بأخذ المساحة المتاحة والتمركز */
+}
+
+/* ضمان بقاء زر الهامبرغر على اليمين */
+.app-header button.md\:hidden {
+  margin-left: auto; /* يضع الزر على اليمين في بيئة RTL */
+  padding: 0.5rem;
+}
+
+/* تحسين العرض على الهواتف */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.75rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+  }
+}
