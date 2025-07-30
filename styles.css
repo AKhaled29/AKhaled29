@@ -554,3 +554,175 @@ body {
     font-size: 0.8rem;
   }
 }
+
+
+
+/* أنماط القائمة المحمولة - تأثير من الأعلى للأسفل */
+
+.mobile-menu {
+  transition: var(--transition);
+  opacity: 0;
+  transform: translateY(-20px);
+  max-height: 0;
+  overflow: hidden;
+  display: block;
+  position: relative;
+  z-index: 10;
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.mobile-menu-open {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 100vh;
+  padding: 1rem;
+}
+
+.mobile-menu-closed {
+  opacity: 0;
+  transform: translateY(-20px);
+  max-height: 0;
+}
+
+/* تحسين مظهر عناصر القائمة */
+.mobile-menu .dropdown {
+  margin-bottom: -0.5rem;
+  width: 100%;
+}
+
+.mobile-menu .dropdown-toggle {
+  width: 100%;
+  text-align: right;
+  background-color: white;
+  border: 1px solid #ddd;
+  color: var(--primary-color);
+}
+
+.mobile-menu .dropdown-menu {
+  position: static;
+  width: 100%;
+  box-shadow: none;
+  border: 1px solid #eee;
+  margin-top: 0.5rem;
+}
+
+/* تأثيرات القوائم المنسدلة - من الأعلى للأسفل */
+.dropdown-menu {
+  z-index: 20;
+  transition: var(--transition);
+  transform-origin: top;
+  transform: scaleY(0);
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  right: 0;
+  top: 100%; /* تظهر أسفل العنصر الأب */
+}
+
+.dropdown:hover .dropdown-menu,
+.dropdown-menu.active {
+  transform: scaleY(1);
+  opacity: 1;
+  visibility: visible;
+}
+
+/* التأكد من ظهور القائمة بشكل صحيح على الشاشات الكبيرة */
+@media (min-width: 768px) {
+  .mobile-menu {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: none;
+    transition: none;
+    display: flex;
+    background: transparent;
+    box-shadow: none;
+    margin-top: 0;
+    padding: 0;
+  }
+  
+  .mobile-menu .dropdown {
+    margin-bottom: 0;
+    width: auto;
+  }
+  
+  .dropdown-menu {
+    transform-origin: top right;
+  }
+}
+
+
+
+
+
+/* تنسيق عنصر "قريبًا" */
+.coming-soon {
+  margin-right: 10px;
+  font-size: 0.75rem;
+  color: var(--danger-color);
+}
+
+/* تنسيق النتائج في NEWSScore */
+
+/*
+.result-card {
+  border: 1px solid var(--border-color);
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  background-color: var(--card-bg);
+  box-shadow: var(--box-shadow);
+}
+
+.result-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-value.critical {
+  color: var(--danger-color);
+}
+
+.result-interpretation {
+  color: var(--text-color);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+*/
+
+
+
+/* زر القائمة المحمولة */
+.app-header button.md\:hidden {
+  margin-left: auto;
+  padding: 0.5rem;
+  transition: var(--transition);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.app-header button.md\:hidden:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.app-header button.md\:hidden:active {
+  transform: scale(0.95);
+}
+
+/* إصلاح المساحة أسفل الهيدر على الجوال */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.5rem 0.75rem !important; /* تقليل الحشو */
+  }
+  
+  .mobile-menu {
+    margin-top: 0.5rem !important; /* تقليل المسافة العلوية */
+  }
+  
+  /* إذا بقت مساحة، جرب هذا: */
+  .header-content > nav {
+    margin-top: 0.25rem !important;
+  }
+}
