@@ -30,95 +30,111 @@
     };
 
     // MyForm Component
-    const MyForm = ({ buttText, inputArr, title, type, handleSub }) => {
-      const [formValues, setFormValues] = useState({});
-      const [errors, setErrors] = useState({});
+ const MyForm = ({ buttText, inputArr, title, type, handleSub }) => {
+  const [formValues, setFormValues] = useState({ dropFactor: '' }); // قيمة افتراضية لـ dropFactor
+  const [errors, setErrors] = useState({});
 
-      const handleChange = (e) => {
-        const { name, value, type: inputType } = e.target;
-        setFormValues({ ...formValues, [name]: inputType === 'radio' ? value : value });
-        if (value.trim() === '' && inputType !== 'radio') {
-          setErrors({ ...errors, [name]: 'هذا الحقل مطلوب' });
-        } else if (inputType === 'number' && (isNaN(value) || Number(value) <= 0)) {
-          setErrors({ ...errors, [name]: 'الرجاء إدخال قيمة عددية صحيحة' });
-        } else {
-          setErrors({ ...errors, [name]: '' });
-        }
-      };
+  const handleChange = (e) => {
+    const { name, value, type: inputType } = e.target;
+    setFormValues({ ...formValues, [name]: inputType === 'radio' ? value : value });
+    if (inputType !== 'radio' && name !== 'customDropFactor') {
+      if (value.trim() === '') {
+        setErrors({ ...errors, [name]: 'هذا الحقل مطلوب' });
+      } else if (inputType === 'number' && (isNaN(value) || Number(value) <= 0)) {
+        setErrors({ ...errors, [name]: 'الرجاء إدخال قيمة عددية صحيحة' });
+      } else {
+        setErrors({ ...errors, [name]: '' });
+      }
+    } else if (name === 'customDropFactor' && formValues.dropFactor === 'أخرى (حدد عدد القطرات)') {
+      if (value.trim() === '') {
+        setErrors({ ...errors, [name]: 'هذا الحقل مطلوب عند اختيار "أخرى"' });
+      } else if (isNaN(value) || Number(value) <= 0) {
+        setErrors({ ...errors, [name]: 'الرجاء إدخال قيمة عددية صحيحة' });
+      } else {
+        setErrors({ ...errors, [name]: '' });
+      }
+    } else {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
 
-      const handleSubmit = (e) => {
-        e.preventDefault();
-        const newErrors = {};
-        inputArr.forEach((input) => {
-          if (!formValues[input.name] && input.type !== 'radio') {
-            newErrors[input.name] = 'هذا الحقل مطلوب';
-          } else if (input.type === 'number' && (isNaN(formValues[input.name]) || Number(formValues[input.name]) <= 0)) {
-            newErrors[input.name] = 'الرجاء إدخال قيمة عددية صحيحة';
-          }
-        });
-        setErrors(newErrors);
-        if (Object.values(newErrors).every((error) => !error)) {
-          try {
-            handleSub(formValues, Object.keys(newErrors).length > 0);
-          } catch (error) {
-            console.error('Form submission error:', error);
-            setErrors({ general: 'حدث خطأ أثناء الحساب، يرجى التحقق من المدخلات' });
-          }
-        }
-      };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newErrors = {};
+    inputArr.forEach((input) => {
+      if (input.name === 'customDropFactor' && formValues.dropFactor !== 'أخرى (حدد عدد القطرات)') {
+        return; // تخطي التحقق إذا لم يكن "أخرى" مختارًا
+      }
+      if (!formValues[input.name] && input.type !== 'radio') {
+        newErrors[input.name] = 'هذا الحقل مطلوب';
+      } else if (input.type === 'number' && (isNaN(formValues[input.name]) || Number(formValues[input.name]) <= 0)) {
+        newErrors[input.name] = 'الرجاء إدخال قيمة عددية صحيحة';
+      }
+    });
+    setErrors(newErrors);
+    if (Object.values(newErrors).every((error) => !error)) {
+      try {
+        handleSub(formValues, Object.keys(newErrors).length > 0);
+      } catch (error) {
+        console.error('Form submission error:', error);
+        setErrors({ general: 'حدث خطأ أثناء الحساب، يرجى التحقق من المدخلات' });
+      }
+    }
+  };
 
-      return (
-        <div className="calculator-container">
-          <h2>{title}</h2>
-          <form className="medical-form" onSubmit={handleSubmit}>
-            <div className="form-row">
-              {inputArr.map((input) => (
-                <div key={input.name} className="form-group">
-                  <label>{input.label}</label>
-                  {input.type === 'radio' ? (
-                    <div className="flex gap-4">
-                      <label>
-                        <input
-                          type="radio"
-                          name={input.name}
-                          value={input.radioOne}
-                          onChange={handleChange}
-                          checked={formValues[input.name] === input.radioOne}
-                        />
-                        {input.radioOne}
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={input.name}
-                          value={input.radioTwo}
-                          onChange={handleChange}
-                          checked={formValues[input.name] === input.radioTwo}
-                        />
-                        {input.radioTwo}
-                      </label>
-                    </div>
-                  ) : (
+  return (
+    <div className="calculator-container">
+      <h2>{title}</h2>
+      <form className="medical-form" onSubmit={handleSubmit}>
+        <div className="form-row">
+          {inputArr.map((input) => (
+            <div key={input.name} className="form-group">
+              <label>{input.label}</label>
+              {input.type === 'radio' ? (
+                <div className="flex gap-4">
+                  <label>
                     <input
-                      type={input.type}
+                      type="radio"
                       name={input.name}
-                      value={formValues[input.name] || ''}
+                      value={input.radioOne}
                       onChange={handleChange}
-                      style={input.style || {}}
+                      checked={formValues[input.name] === input.radioOne}
                     />
-                  )}
-                  {errors[input.name] && <span className="text-danger-color text-sm">{errors[input.name]}</span>}
+                    {input.radioOne}
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name={input.name}
+                      value={input.radioTwo}
+                      onChange={handleChange}
+                      checked={formValues[input.name] === input.radioTwo}
+                    />
+                    {input.radioTwo}
+                  </label>
                 </div>
-              ))}
+              ) : (
+                <input
+                  type={input.type}
+                  name={input.name}
+                  value={formValues[input.name] || ''}
+                  onChange={handleChange}
+                  style={input.style || {}}
+                  step={input.step || '1'}
+                  placeholder={input.placeholder || ''}
+                  disabled={input.name === 'customDropFactor' && formValues.dropFactor !== 'أخرى (حدد عدد القطرات)'}
+                />
+              )}
+              {errors[input.name] && <span className="text-danger-color text-sm">{errors[input.name]}</span>}
             </div>
-            {errors.general && <div className="text-danger-color text-center mb-4">{errors.general}</div>}
-            <button type="submit" className="calculate-btn">{buttText}</button>
-          </form>
+          ))}
         </div>
-      );
-    };
-
-  
+        {errors.general && <div className="text-danger-color text-center mb-4">{errors.general}</div>}
+        <button type="submit" className="calculate-btn">{buttText}</button>
+      </form>
+    </div>
+  );
+};
   const NEWSScore = () => {
   const [result, setResult] = useState(null); // تغيير إلى null لتخزين كائن
   
@@ -258,7 +274,7 @@
           handleSub={handleSubmit}
         />
         <div className="result-container" style={{ display: result ? 'block' : 'none' }}>
-          <h3>النتائج:</h3>
+          <h3>النتائج</h3>
           <div className="result-grid">
             <div className="result-card">
               <span className="result-label">النتيجة:</span>
@@ -287,84 +303,110 @@
   );
 };
   
-    // FluidFlowRate Component
-    const FluidFlowRate = () => {
-      const [result, setResult] = useState('');
-      const [timeValue, setTimeValue] = useState('');
-      
-      const inpArr = [
-        { label: 'إجمالي حجم السائل (مل)', type: 'number', name: 'volume' },
-        { 
-          label: 'نوع أنبوب التوصيل',
-          type: 'radio',
-          name: 'dropFactor',
-          radioOne: 'IV Set (15 قطرة/مل)',
-          radioTwo: 'Solu-set (60 قطرة/مل)',
-        },
-        { 
-          label: '',
-          type: 'radio',
-          name: 'dropFactor',
-          radioOne: 'Blood transfusion (10 قطرة/مل)',
-          radioTwo: 'أخرى (حدد عدد القطرات)',
-        },
-        { label: 'عدد القطرات/مل (إذا اخترت أخرى)', type: 'number', name: 'customDropFactor', placeholder: 'أدخل عدد القطرات لكل مل' },
-        { label: 'الوقت (ساعات)', type: 'number', name: 'time' },
-      ];
+  // FluidFlowRate Component
+const FluidFlowRate = () => {
+  const [result, setResult] = useState('');
+  const [timeValue, setTimeValue] = useState('');
 
-      const handleSubmit = (values, errors) => {
-        if (errors) {
-          setResult('');
-          return;
-        }
-        
-        let dropFactor;
-        if (values.dropFactor === 'IV Set (15 قطرة/مل)') {
-          dropFactor = 15;
-        } else if (values.dropFactor === 'Solu-set (60 قطرة/مل)') {
-          dropFactor = 60;
-        } else if (values.dropFactor === 'Blood transfusion (10 قطرة/مل)') {
-          dropFactor = 10;
-          // تعيين الوقت تلقائيًا لـ 4 ساعات لنقل الدم
-          values.time = 4;
-          setTimeValue('4');
-        } else {
-          dropFactor = Number(values.customDropFactor) || 0;
-        }
-        
-        if (dropFactor <= 0) {
-          setResult('الرجاء إدخال قيمة صحيحة لعدد القطرات');
-          return;
-        }
-        
-        const dropsPerMinute = (values.volume * dropFactor) / (values.time * 60);
-        setResult(`اضبط المحلول على ${Math.round(dropsPerMinute)} قطرة/دقيقة`);
-      };
+  const inpArr = [
+    { label: 'إجمالي حجم المحلول (مل)', type: 'number', name: 'volume' },
+    {
+      label: 'وصلة محاليل وريدية',
+      type: 'radio',
+      name: 'dropFactor',
+      radioOne: 'IV Set (15 drop/ml)',
+      radioTwo: 'Solu-set (60 drop/ml)',
+    },
+    {
+      label: 'وصلة نقل الدم و مشتقاته',
+      type: 'radio',
+      name: 'dropFactor',
+      radioOne: 'Blood transfusion (10 drop/ml)',
+      radioTwo: 'أخرى',
+    },
+    {
+      label: 'عدد القطرات/مل (إذا اخترت أخرى)',
+      type: 'number',
+      name: 'customDropFactor',
+      placeholder: 'أدخل عدد القطرات لكل مل',
+    },
+    { label: 'الوقت (ساعات)', type: 'number', name: 'time' },
+  ];
 
-      return (
-        <div className="tab-content" id="fluid-flow-rate">
-          <div className="calculator-container">
-            <MyForm
-              buttText="حساب"
-              inputArr={inpArr}
-              title="حاسبة معدل تدفق السوائل"
-              type="FluidFlowRate"
-              handleSub={handleSubmit}
-            />
-            <div className="result-container" style={{ display: result ? 'block' : 'none' }}>
-              <h3>النتائج:</h3>
-              <div className="result-grid">
-                <div className="result-card">
-                  <span className="result-label">معدل التدفق:</span>
-                  <span className="result-value" style={{ color: 'var(--success-color)' }}>{result}</span>
-                </div>
-              </div>
-              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+  const handleSubmit = (values, errors) => {
+    if (errors) {
+      setResult('');
+      return;
+    }
+
+    // التحقق من الحقول الأساسية
+    if (
+      !values.volume ||
+      !values.dropFactor ||
+      !values.time ||
+      isNaN(values.volume) ||
+      Number(values.volume) <= 0 ||
+      isNaN(values.time) ||
+      Number(values.time) <= 0
+    ) {
+      setResult('الرجاء إدخال جميع القيم بشكل صحيح');
+      return;
+    }
+
+    // التحقق من customDropFactor فقط إذا تم اختيار "أخرى"
+    if (values.dropFactor === 'أخرى') {
+      if (!values.customDropFactor || isNaN(values.customDropFactor) || Number(values.customDropFactor) <= 0) {
+        setResult('الرجاء إدخال قيمة عددية صحيحة لعدد القطرات/مل');
+        return;
+      }
+    }
+
+    let dropFactor;
+    if (values.dropFactor === 'IV Set (15 drop/ml)') {
+      dropFactor = 15;
+    } else if (values.dropFactor === 'Solu-set (60 drop/ml)') {
+      dropFactor = 60;
+    } else if (values.dropFactor === 'Blood transfusion (10 drop/ml)') {
+      dropFactor = 10;
+      values.time = 4;
+      setTimeValue('4');
+    } else {
+      dropFactor = Number(values.customDropFactor);
+    }
+
+    if (dropFactor <= 0) {
+      setResult('الرجاء إدخال قيمة صحيحة لعدد القطرات');
+      return;
+    }
+
+    const dropsPerMinute = (values.volume * dropFactor) / (values.time * 60);
+    setResult(`اضبط المحلول على ${Math.round(dropsPerMinute)} قطرة/دقيقة`);
+  };
+
+  return (
+    <div className="tab-content" id="fluid-flow-rate">
+      <div className="calculator-container">
+        <MyForm
+          buttText="حساب"
+          inputArr={inpArr}
+          title="حاسبة معدل تدفق السوائل"
+          type="FluidFlowRate"
+          handleSub={handleSubmit}
+        />
+        <div className="result-container" style={{ display: result ? 'block' : 'none' }}>
+          <h3>النتائج:</h3>
+          <div className="result-grid">
+            <div className="result-card">
+              <span className="result-label">معدل التدفق</span>
+              <span className="result-value" style={{ color: 'var(--success-color)' }}>{result}</span>
             </div>
           </div>
+          <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
         </div>
-      );
-    };
+      </div>
+    </div>
+  );
+};
 
     // BradenScore Component
     const BradenScore = () => {
@@ -387,7 +429,7 @@
         },
         {
           key: "moisture",
-          question: "2. الرطوبة (Moisture)",
+          question: "2. الرطوبة (Moisture) : الجلد رطب أو مبلول، سواء من العرق أو البول أو السوائل، وده بيزود خطر تهيج الجلد وقرح الفراش",
           options: [
             { label: "مبلل باستمرار", value: 1 },
             { label: "غالبًا مبلل", value: 2 },
@@ -397,7 +439,7 @@
         },
         {
           key: "activity",
-          question: "3. النشاط (Activity)",
+          question: "3. النشاط (Activity) : حركة المريض خلال اليوم",
           options: [
             { label: "طريح الفراش", value: 1 },
             { label: "على كرسي فقط", value: 2 },
@@ -407,7 +449,7 @@
         },
         {
           key: "mobility",
-          question: "4. الحركة (Mobility)",
+          question: "4. الحركة (Mobility) :  قدرة المريض على تغيير وضعه",
           options: [
             { label: "غير قادر على الحركة تمامًا", value: 1 },
             { label: "محدود جدًا", value: 2 },
@@ -429,9 +471,9 @@
           key: "friction",
           question: "6. الاحتكاك والانزلاق (Friction & Shear)",
           options: [
-            { label: "ينزلق ويتطلب مساعدة كبيرة", value: 1 },
-            { label: "يحتاج مساعدة بسيطة", value: 2 },
-            { label: "لا توجد مشكلة", value: 3 }
+            { label: "ينزلق ويتطلب مساعدة كبيرة   (احتكاك شديد بين جسمه والمرتبة)", value: 1 },
+            { label: "يحتاج مساعدة بسيطة   (احتكاك قليل أثناء النقل أو التقليب)", value: 2 },
+            { label: "لا توجد مشكلة   (بيتحرك ويتقلب لوحده من غير ما يحصل احتكاك أو انزلاق)", value: 3 }
           ]
         }
       ];
@@ -462,14 +504,17 @@
             تعليمات تمريضية :
             - قلب المريض كل ساعتين.
             - استخدم مرتبة ضغط هواء (Air mattress).
+                        - استخدم وسادات ناعمة.
             - فحص الجلد يوميًا (كل بداية شفت).
+                        - راقب مناطق الضغط.
+                        - الحفاظ على جفاف الجلد.
             - ترطيب الجلد واستخدام كريمات.
           `;
         } else if (totalScore <= 12) {
           risk = "خطر شديد (High Risk)";
           nursingInstructions = `
              تعليمات تمريضية :
-            - قلب المريض كل 3 ساعات.
+            - قلب المريض كل 2 ساعات.
             - راقب مناطق الضغط.
             - الحفاظ على جفاف الجلد.
             - تغذية جيدة.
@@ -539,14 +584,14 @@
               </>
             ) : (
               <div className="result-container">
-                <h3>النتائج:</h3>
+                <h3>النتائج</h3>
                 <div className="result-grid">
                   <div className="result-card">
-                    <span className="result-label">النتيجة الكلية:</span>
+                    <span className="result-label">النتيجة الكلية</span>
                     <span className="result-value" style={{ color: 'var(--success-color)' }}>{score}</span>
                   </div>
                   <div className="result-card">
-                    <span className="result-label">مستوى الخطورة:</span>
+                    <span className="result-label">مستوى الخطورة</span>
                     <span className="result-value" style={{ color: 'var(--success-color)' }}>{riskLevel}</span>
                   </div>
                 </div>
@@ -559,9 +604,7 @@
                 >
                   إعادة الحساب
                 </button>
-                <div className="disclaimer">
-                  هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.
-                </div>
+               
               </div>
             )}
           </div>
@@ -593,7 +636,7 @@
           <div className="calculator-container">
             <div id="inst">
               <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
-              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر جميع الأنابيب لضمان تفريغ الهواء</div>
+              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر الوصلة الوريدية لضمان تفريغ الهواء</div>
               <div className="instructions">تحضير 500 مل من D10 في غرفة المريض كإجراء احترازي للتدخل في حالة  hypoglycemia </div>
             </div>
             <MyForm
@@ -604,14 +647,13 @@
               handleSub={handleSubmit}
             />
             <div className="result-container" style={{ display: result ? 'block' : 'none' }}>
-              <h3>النتائج:</h3>
+              <h3>النتائج</h3>
               <div className="result-grid">
                 <div className="result-card">
-                  <span className="result-label">معدل الحقن (مل/ساعة):</span>
+                  <span className="result-label">Rate (ml/hr)</span>
                   <span className="result-value" style={{ color: 'var(--success-color)' }}>{result}</span>
                 </div>
               </div>
-              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
             </div>
           </div>
         </div>
@@ -675,7 +717,7 @@
           <div className="calculator-container">
             <div id="inst">
               <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
-              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر جميع الأنابيب لضمان تفريغ الهواء</div>
+              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر الوصلة الوريدية لضمان تفريغ الهواء</div>
               <div className="instructions">تحضير 500 مل من D10 في غرفة المريض كإجراء احترازي للتدخل في حالة hypoglycemia</div>
             </div>
             <MyForm
@@ -686,10 +728,9 @@
               handleSub={handleSubmit}
             />
             <div className="result-container" style={{ display: result || result2 ? 'block' : 'none' }}>
-              <h3>النتائج:</h3>
+              <h3>النتائج</h3>
               <div className="result-text" style={{ color: 'var(--success-color)' }}>{result}</div>
               {result2 && <div className="result-text" style={{ color: 'var(--success-color)' }}>{result2}</div>}
-              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
             </div>
           </div>
         </div>
@@ -745,18 +786,17 @@
               handleSub={handleSubmit}
             />
             <div className="result-container" style={{ display: initBResult || initRResult ? 'block' : 'none' }}>
-              <h3>النتائج:</h3>
+              <h3>النتائج</h3>
               <div className="result-grid">
                 <div className="result-card">
-                  <span className="result-label">الجرعة الأولية (مل):</span>
+                  <span className="result-label">Initial Bolus (ml)</span>
                   <span className="result-value" style={{ color: 'var(--success-color)' }}>{initBResult}</span>
                 </div>
                 <div className="result-card">
-                  <span className="result-label">المعدل الأولي (مل/ساعة):</span>
+                  <span className="result-label">Initial Rate (ml/hr)</span>
                   <span className="result-value" style={{ color: 'var(--success-color)' }}>{initRResult}</span>
                 </div>
               </div>
-              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
             </div>
           </div>
         </div>
@@ -829,10 +869,9 @@
               handleSub={handleSubmit}
             />
             <div className="result-container" style={{ display: extraBolusR || changingRateR ? 'block' : 'none' }}>
-              <h3>النتائج:</h3>
+              <h3>النتائج</h3>
               <div className="result-text" style={{ color: 'var(--success-color)' }}>{changingRateR}</div>
               <div className="result-text" style={{ color: 'var(--success-color)' }}>{extraBolusR}</div>
-              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
             </div>
           </div>
         </div>
@@ -855,12 +894,12 @@
         }
         let x = roundHalf(values.currentcbg / 100);
         if (values.currentcbg < 180) {
-          setInitbResult('غير متاح');
-          setInitrResult('غير متاح');
+          setInitbResult('NA');
+          setInitrResult('NA');
           setResultsElement('');
         } else if (values.currentcbg < 300) {
           setInitrResult(x);
-          setInitbResult('غير متاح');
+          setInitbResult('NA');
           setResultsElement('');
         } else {
           setInitrResult(x);
@@ -877,34 +916,38 @@
         <div className="tab-content" id="iic-initiation">
           <div className="calculator-container">
             <div id="inst">
-              <div className="instructions">بدء تسريب الأنسولين إذا كان أكثر من 180 ملج/ديسيلتر في مريض السكري</div>
-              <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
-              <div className="instructions">قبل التوصيل، اغسل 20 مل من التسريب عبر جميع الأنابيب</div>
+         <div className="instructions">بدء تمرير الأنسولين إذا كان أكثر من (200 مليجرام/ديسيلتر)  في مريض السكري</div>
+             <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
+              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر الوصلة الوريدية لضمان تفريغ الهواء</div>
+                            <div className="instructions">تحضير 500 مل من D10 في غرفة المريض كإجراء احترازي للتدخل في حالة  hypoglycemia </div>
+
             </div>
             <MyForm
               buttText="حساب"
               inputArr={inpArr}
-              title="بدء علاج الأنسولين (غير DKA)"
+              title="بدء علاج الأنسولين (Non-DKA)"
               type="IICInitiation"
               handleSub={handleSubmit}
             />
             <div className="result-container" style={{ display: initbResult || initrResult || resultsElement ? 'block' : 'none' }}>
-              <h3>النتائج:</h3>
+              <h3>النتائج</h3>
               <div className="result-grid">
                 <div className="result-card">
-                  <span className="result-label">الجرعة الأولية (مل):</span>
+                  <span className="result-label">Initial Bolus (ml)</span>
                   <span className="result-value" style={{ color: 'var(--success-color)' }}>{initbResult}</span>
                 </div>
                 <div className="result-card">
-                  <span className="result-label">المعدل الأولي (مل/ساعة):</span>
+                  <span className="result-label">Initial Rate (ml/hr)</span>
                   <span className="result-value" style={{ color: 'var(--success-color)' }}>{initrResult}</span>
                 </div>
               </div>
               {resultsElement && (
                 <div className="result-text" style={{ color: 'var(--success-color)' }}>{resultsElement}</div>
               )}
-              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
-            </div>
+
+
+
+              </div>
           </div>
         </div>
       );
@@ -1075,24 +1118,23 @@
         <div className="tab-content" id="iic-maintenance">
           <div className="calculator-container">
             <div id="inst">
-              <div className="instructions">بدء تسريب الأنسولين إذا كان أكثر من 180 ملج/ديسيلتر في مريض السكري</div>
-              <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
-              <div className="instructions">قبل التوصيل، اغسل 20 مل من التسريب عبر جميع الأنابيب</div>
+              <div className="instructions">بدء تمرير الأنسولين إذا كان أكثر من (200 مليجرام/ديسيلتر)  في مريض السكري</div>
+             <div className="instructions">إضافة 50 وحدة أنسولين + 50 مل محلول ملحي عادي</div>
+              <div className="instructions">قبل التوصيل، مرر 20 مل من المحلول عبر الوصلة الوريدية لضمان تفريغ الهواء</div>
             </div>
             <MyForm
               buttText="حساب"
               inputArr={inpArr}
-              title="صيانة الأنسولين (غير DKA)"
+              title="صيانة الأنسولين (Non-DKA)"
               type="IICMaintenance"
               handleSub={handleSubmit}
             />
             <div className="result-container" style={{ display: resultsElement || resultsElement2 ? 'block' : 'none' }}>
-              <h3>النتائج:</h3>
+              <h3>النتائج</h3>
               <div className="result-text" style={{ color: 'var(--success-color)' }}>{resultsElement}</div>
               {resultsElement2 && (
                 <div className="result-text" style={{ color: 'var(--success-color)' }}>{resultsElement2}</div>
               )}
-              <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
             </div>
           </div>
         </div>
@@ -1275,15 +1317,15 @@ const App = () => {
       ]
     },
     {
-      title: 'حاسبة احتمالية حدوث قرح الفراش',
+      title: 'حاسبة حدوث قرح الفراش',
       items: [
         { id: 'braden-score', label: 'Braden Score' }
       ]
     },
     {
-      title: 'حاسبة السوائل',
+      title: 'حاسبة تدفق المحاليل',
       items: [
-        { id: 'fluid-flow-rate', label: 'معدل تدفق السوائل' }
+        { id: 'fluid-flow-rate', label: 'Fluid Flow Rate' }
       ]
     },
     {
@@ -1295,7 +1337,7 @@ const App = () => {
     {
       title: 'حاسبة تحليل غازات الدم',
       items: [
-        { id: 'new-feature', label: 'ميزة جديدة', comingSoon: true }
+        { id: 'new-feature', label: 'Arterial Blood Gas (ABG) Analyzer', comingSoon: true }
       ]
     },
     
