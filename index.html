@@ -45,7 +45,7 @@
       } else {
         setErrors({ ...errors, [name]: '' });
       }
-    } else if (name === 'customDropFactor' && formValues.dropFactor === 'أخرى (حدد عدد القطرات)') {
+    } else if (name === 'customDropFactor' && formValues.dropFactor === 'أخرى') {
       if (value.trim() === '') {
         setErrors({ ...errors, [name]: 'هذا الحقل مطلوب عند اختيار "أخرى"' });
       } else if (isNaN(value) || Number(value) <= 0) {
@@ -122,7 +122,7 @@
                   style={input.style || {}}
                   step={input.step || '1'}
                   placeholder={input.placeholder || ''}
-                  disabled={input.name === 'customDropFactor' && formValues.dropFactor !== 'أخرى (حدد عدد القطرات)'}
+                  disabled={input.name === 'customDropFactor' && formValues.dropFactor !== 'أخرى'}
                 />
               )}
               {errors[input.name] && <span className="text-danger-color text-sm">{errors[input.name]}</span>}
@@ -401,7 +401,7 @@ const FluidFlowRate = () => {
               <span className="result-value" style={{ color: 'var(--success-color)' }}>{result}</span>
             </div>
           </div>
-          <div className="disclaimer">هذه النتائج لأغراض تعليمية فقط. يرجى مراجعة الطبيب قبل التطبيق.</div>
+          <div className="disclaimer">مدة صلاحية كيس الدم أثناء الإعطاء 4 ساعات...البلازما 60 دقيقة بعد الذوبان...الصفائح الدموية لا تتجاوز 30 دقيقة.</div>
         </div>
       </div>
     </div>
