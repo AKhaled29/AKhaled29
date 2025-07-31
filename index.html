@@ -62,7 +62,7 @@
     e.preventDefault();
     const newErrors = {};
     inputArr.forEach((input) => {
-      if (input.name === 'customDropFactor' && formValues.dropFactor !== 'أخرى (حدد عدد القطرات)') {
+      if (input.name === 'customDropFactor' && formValues.dropFactor !== 'أخرى') {
         return; // تخطي التحقق إذا لم يكن "أخرى" مختارًا
       }
       if (!formValues[input.name] && input.type !== 'radio') {
